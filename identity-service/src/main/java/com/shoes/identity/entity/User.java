@@ -6,19 +6,6 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * User entity — aggregate root cua bounded context Identity.
- *
- * Quy uoc:
- * - email unique tren toan he thong (login bang email)
- * - password BCrypt hash (NULL voi user OAuth chua set password)
- * - status: true=active, false=da khoa (admin disable)
- * - provider+providerId: track nguon dang ky (LOCAL/GOOGLE/FACEBOOK)
- * - roles: Many-to-Many voi Role qua bang user_roles
- *
- * KHONG luu thong tin nhay cam khac (CCCD, the tin dung...) o day.
- * Cart/Order/Payment chi tham chieu user qua id, KHONG join cross-DB.
- */
 @Entity
 @Table(name = "users",
         uniqueConstraints = {
@@ -55,7 +42,7 @@ public class User extends BaseEntity {
     private String address;
 
     @Column(name = "avatar", length = 500)
-    private String avatar;
+    private String avatar = "";
 
     /** true=active (login duoc), false=bi admin khoa */
     @Column(name = "status", nullable = false)

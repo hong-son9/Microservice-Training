@@ -5,13 +5,12 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: false           # Tu dinh tuyen rieng (KHONG auto theo service name)
-      # Routing: external path → service in Eureka (lb://SERVICE-NAME)
+          enabled: false
       routes:
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
-            - Path=/api/identity/**, /api/auth/**, /api/users/**
+            - Path=/api/identity/**, /api/auth/**, /api/users/**, /api/roles/**
         - id: product-service
           uri: lb://PRODUCT-SERVICE
           predicates:

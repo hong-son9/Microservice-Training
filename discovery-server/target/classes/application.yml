@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: discovery-server
+
+server:
+  port: 8761
+
+# Eureka server config — KHONG register chinh no, KHONG fetch registry
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    # Tat self-preservation cho dev (tranh keep dead service trong list)
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

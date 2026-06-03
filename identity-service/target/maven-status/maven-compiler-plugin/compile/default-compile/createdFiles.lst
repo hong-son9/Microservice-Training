@@ -1,0 +1,3 @@
+com\shoes\identity\config\SecurityConfig.class
+com\shoes\identity\controller\PingController.class
+com\shoes\identity\IdentityServiceApplication.class

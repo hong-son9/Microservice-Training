@@ -28,14 +28,10 @@ public class Category extends BaseEntity {
     private String slug;
 
     @Column(name = "image", length = 500)
-    private String image;
+    private String image = "";
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-
-    /** ID category cha — null neu la category goc (cho phep nested category) */
-    @Column(name = "parent_id")
-    private Long parentId;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default

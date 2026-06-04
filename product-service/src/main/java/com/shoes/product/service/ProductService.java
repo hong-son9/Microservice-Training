@@ -14,6 +14,8 @@ public interface ProductService {
 
     List<ProductResponse> getAll();
 
+    List<ProductResponse> getAllById(List<Long> id);
+
 //    UserResponse update(Long id, UpdateUserRequest request);
 
     void delete(Long id);

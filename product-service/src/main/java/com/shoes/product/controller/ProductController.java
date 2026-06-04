@@ -25,6 +25,11 @@ public class ProductController {
         return productService.getById(id);
     }
 
+    @GetMapping("/snapshots")
+    public List<ProductResponse> getProductsByIds(@RequestParam("ids") List<Long> ids) {
+        return productService.getAllById(ids);
+    }
+
     @GetMapping()
     public List<ProductResponse> getAll() {
         return productService.getAll();

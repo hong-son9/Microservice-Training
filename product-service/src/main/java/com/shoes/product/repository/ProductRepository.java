@@ -19,6 +19,8 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
 
     @EntityGraph(attributePaths = {"brand", "categories"})
     List<Product> findAll();
+    @EntityGraph(attributePaths = {"brand", "categories"})
+    List<Product> findByIdIn(List<Long> ids);
 
     boolean existsBySku(String sku);
 

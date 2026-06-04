@@ -71,6 +71,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductResponse> getAllById(List<Long> ids) {
+        List<Product> products = productRepository.findByIdIn(ids);
+        return products.stream()
+                .map(this::toProductResponse)
+                .toList();
+    }
+
+    @Override
     public void delete(Long id) {
 
     }

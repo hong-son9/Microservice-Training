@@ -40,6 +40,9 @@ import java.util.List;
 @ToString(exclude = {"items", "statusHistory"})
 @EqualsAndHashCode(of = "id", callSuper = false)
 public class Order extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /** Ma don hien thi cho khach — VD: "SH-20260603-00123" */
     @Column(name = "order_code", nullable = false, length = 30, unique = true)

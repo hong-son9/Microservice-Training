@@ -41,3 +41,7 @@ management:
     web:
       exposure:
         include: health,info
+app:
+  jwt:
+    secret: shoes-microservices-super-secret-jwt-key-min-256-bits-for-hs256-algorithm-pls-change-in-prod
+    expiration-ms: 86400000

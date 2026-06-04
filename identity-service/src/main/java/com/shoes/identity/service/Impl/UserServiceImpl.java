@@ -9,6 +9,7 @@ import com.shoes.identity.repository.RoleRepository;
 import com.shoes.identity.repository.UserRepository;
 import com.shoes.identity.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +58,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getById(Long id) {
-        return null;
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Tài khoản chưa được xác thực");
+        }
+
+        User currentUser = (User) authentication.getPrincipal();
+        if (currentUser == null) {
+            throw new RuntimeException("No login information found.");
+        }
+
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(role -> role.getName().equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (!isAdmin && !id.equals(currentUser.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not have the right to view other people's information!");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+        return toUserResponse(user);
     }
 
     @Override

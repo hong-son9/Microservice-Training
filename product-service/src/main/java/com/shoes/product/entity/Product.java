@@ -39,6 +39,9 @@ import java.util.Set;
 @ToString(exclude = {"sizes", "images", "categories"})
 @EqualsAndHashCode(of = "id", callSuper = false)
 public class Product extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "sku", nullable = false, length = 50)
     private String sku;

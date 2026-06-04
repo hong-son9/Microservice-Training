@@ -15,5 +15,5 @@ public class CreateCategoryRequest {
     private String image = "";
     private String description;
     private Boolean isActive;
-    private Integer displayOrder;
+    private Integer displayOrder = 0;
 }

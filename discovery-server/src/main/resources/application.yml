@@ -10,6 +10,8 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka
   server:
     # Tat self-preservation cho dev (tranh keep dead service trong list)
     enable-self-preservation: false

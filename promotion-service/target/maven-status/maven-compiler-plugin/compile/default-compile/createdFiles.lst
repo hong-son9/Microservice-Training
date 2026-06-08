@@ -1,2 +1,9 @@
 com\shoes\promotion\controller\PingController.class
+com\shoes\promotion\entity\Promotion.class
+com\shoes\promotion\config\JpaAuditingConfig.class
+com\shoes\promotion\entity\Promotion$PromotionBuilder.class
+com\shoes\promotion\entity\BaseEntity.class
+com\shoes\promotion\entity\PromotionUsage.class
 com\shoes\promotion\PromotionServiceApplication.class
+com\shoes\promotion\entity\DiscountType.class
+com\shoes\promotion\entity\PromotionUsage$PromotionUsageBuilder.class

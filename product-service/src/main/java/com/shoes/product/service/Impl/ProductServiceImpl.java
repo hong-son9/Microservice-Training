@@ -2,10 +2,8 @@ package com.shoes.product.service.Impl;
 
 import com.shoes.product.dto.Request.CreateProductRequest;
 import com.shoes.product.dto.Response.ProductResponse;
-import com.shoes.product.entity.Brand;
-import com.shoes.product.entity.Category;
-import com.shoes.product.entity.Product;
-import com.shoes.product.entity.ProductStatus;
+import com.shoes.product.dto.Response.ProductSizeResponse;
+import com.shoes.product.entity.*;
 import com.shoes.product.repository.BrandRepository;
 import com.shoes.product.repository.CategoryRepository;
 import com.shoes.product.repository.ProductRepository;
@@ -13,10 +11,7 @@ import com.shoes.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
                     .map(name -> categoryRepository.findByName(name).orElseThrow(() -> new RuntimeException("Category not found")))
                     .collect(Collectors.toSet());
         }
+
         Product product = Product.builder()
                 .name(request.getName())
                 .sku(request.getSku())
@@ -55,6 +51,12 @@ public class ProductServiceImpl implements ProductService {
                 .importPrice(request.getImportPrice())
                 .status(ProductStatus.ACTIVE)
                 .build();
+        if (request.getSizes() != null) {
+            for (ProductSize size : request.getSizes()) {
+                size.setProduct(product);
+                product.getSizes().add(size);
+            }
+        }
         return toProductResponse(productRepository.save(product));
     }
 
@@ -83,6 +85,14 @@ public class ProductServiceImpl implements ProductService {
 
     }
     private ProductResponse toProductResponse(Product product) {
+        List<ProductSizeResponse> sizeResponses = product.getSizes().stream()
+                .map(size -> ProductSizeResponse.builder()
+                        .id(size.getId())
+                        .sizeVn(size.getSizeVn())
+                        .quantity(size.getQuantity())
+                        .build())
+                .toList();
+
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -92,6 +102,7 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .brandName(Optional.ofNullable(product.getBrand()).map(Brand::getName).orElse(null))
                 .category(product.getCategories().stream().map(Category::getName).collect(Collectors.toSet()))
+                .sizes(sizeResponses)
                 .salePrice(product.getSalePrice())
                 .importPrice(product.getImportPrice())
                 .status(product.getStatus())

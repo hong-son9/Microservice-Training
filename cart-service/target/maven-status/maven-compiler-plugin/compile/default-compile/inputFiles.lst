@@ -1,2 +1,6 @@
 C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\CartServiceApplication.java
+C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\config\JpaAuditingConfig.java
 C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\controller\PingController.java
+C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\entity\BaseEntity.java
+C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\entity\Cart.java
+C:\MicroservideTrainng\cart-service\src\main\java\com\shoes\cart\entity\CartItem.java

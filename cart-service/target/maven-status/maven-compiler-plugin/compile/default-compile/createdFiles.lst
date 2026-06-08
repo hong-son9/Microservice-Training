@@ -1,2 +1,8 @@
+com\shoes\cart\entity\Cart$CartBuilder.class
+com\shoes\cart\entity\Cart.class
+com\shoes\cart\entity\CartItem$CartItemBuilder.class
+com\shoes\cart\config\JpaAuditingConfig.class
 com\shoes\cart\CartServiceApplication.class
+com\shoes\cart\entity\BaseEntity.class
 com\shoes\cart\controller\PingController.class
+com\shoes\cart\entity\CartItem.class

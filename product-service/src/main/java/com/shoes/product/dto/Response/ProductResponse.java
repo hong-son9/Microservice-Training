@@ -1,9 +1,12 @@
 package com.shoes.product.dto.Response;
 
+import com.shoes.product.entity.ProductSize;
 import com.shoes.product.entity.ProductStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -25,6 +28,7 @@ public class ProductResponse {
     private Long totalSold;
 
     private String brandName;
+    private List<ProductSizeResponse> sizes = new ArrayList<>();
     private Set<String> category;
 
     private ProductStatus status;

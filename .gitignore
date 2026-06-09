@@ -1,0 +1,23 @@
+# --- Build Artifacts ---
+*.jar
+*.lst
+build/
+target/
+out/
+.gradle/
+
+# --- IDE Settings ---
+.idea/
+*.iml
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log

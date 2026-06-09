@@ -1,21 +1,21 @@
 package com.shoes.order.exception;
 
 /**
- * Exception thrown when a requested resource is not found
+ * Exception thrown when a resource already exists (conflict)
  */
-public class ResourceNotFoundException extends RuntimeException {
+public class ConflictException extends RuntimeException {
     private final String resourceName;
     private final String fieldName;
     private final Object fieldValue;
 
-    public ResourceNotFoundException(String resourceName, String fieldName, Object fieldValue) {
-        super(String.format("%s not found with %s: %s", resourceName, fieldName, fieldValue));
+    public ConflictException(String resourceName, String fieldName, Object fieldValue) {
+        super(String.format("%s already exists with %s: %s", resourceName, fieldName, fieldValue));
         this.resourceName = resourceName;
         this.fieldName = fieldName;
         this.fieldValue = fieldValue;
     }
 
-    public ResourceNotFoundException(String message) {
+    public ConflictException(String message) {
         super(message);
         this.resourceName = null;
         this.fieldName = null;

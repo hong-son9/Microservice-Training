@@ -14,6 +14,11 @@ spring:
       idle-timeout: 600000
       initialization-fail-timeout: 60000
 
+  kafka:
+    bootstrap-servers: kafka:29092 # Gọi tới tên container Kafka trong mạng Docker
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   jpa:
     hibernate:
       ddl-auto: update
@@ -51,3 +56,5 @@ app:
   jwt:
     secret: shoes-microservices-super-secret-jwt-key-min-256-bits-for-hs256-algorithm-pls-change-in-prod
     expiration-ms: 86400000
+security:
+  strategy: MODE_INHERITABLETHREADLOCAL

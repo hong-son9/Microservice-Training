@@ -13,6 +13,7 @@ import com.shoes.order.entity.Order;
 import com.shoes.order.entity.OrderItem;
 import com.shoes.order.entity.OrderStatus;
 import com.shoes.order.dto.event.OrderPlacedEvent;
+import com.shoes.order.exception.ConflictException;
 import com.shoes.order.exception.ResourceNotFoundException;
 import com.shoes.order.repository.OrderRepository;
 import com.shoes.order.service.OrderService;
@@ -121,19 +122,19 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse createFromCart(CreateOrderFromCartRequest createOrderFromCartRequest) {
         ResponseEntity<ApiResponse<CartResponse>> cartResponse = cartClient.getCartByUserId();
         if (cartResponse.getBody() == null || !cartResponse.getBody().getSuccess()) {
-            throw new ResourceNotFoundException("Failed to retrieve cart");
+            throw new ConflictException("Failed to retrieve cart");
         }
         CartResponse cartData = cartResponse.getBody().getData();
         List<CartItemResponse> allCartItems = cartData.getItems();
         if (allCartItems == null || allCartItems.isEmpty()) {
-            throw new ResourceNotFoundException("CartItems is empty!");
+            throw new ConflictException("CartItems is empty!");
         }
         List<CartItemResponse> selectedItems = allCartItems.stream()
-                .filter(item -> createOrderFromCartRequest.getSelectedCartItemIds().contains(item.getId()))
+                .filter(item -> createOrderFromCartRequest.getSelectedProductIds().contains(item.getId()))
                 .toList();
 
         if (selectedItems.isEmpty()) {
-            throw new ResourceNotFoundException("Not found any cart item");
+            throw new ConflictException("Not found any cart item");
         }
         Order order = Order.builder()
                 .orderCode("SH-" + System.currentTimeMillis())
@@ -176,7 +177,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderId(savedOrder.getId())
                 .orderCode(savedOrder.getOrderCode())
                 .buyerUserId(savedOrder.getBuyerUserId())
-                .selectedProductIds(createOrderFromCartRequest.getSelectedCartItemIds())
+                .selectedProductIds(createOrderFromCartRequest.getSelectedProductIds())
                 .items(itemEvents)
                 .build();
         kafkaTemplate.send("order-placed-topic", kafkaEvent);

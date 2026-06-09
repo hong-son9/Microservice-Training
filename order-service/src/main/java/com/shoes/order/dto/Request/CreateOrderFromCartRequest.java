@@ -11,5 +11,5 @@ public class CreateOrderFromCartRequest {
     private String receiverAddress;
     private String note;
 
-    private List<Long> selectedCartItemIds;
+    private List<Long> selectedProductIds;
 }

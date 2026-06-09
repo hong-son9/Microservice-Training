@@ -1,111 +1,227 @@
 package com.shoes.product.service.Impl;
 
 import com.shoes.product.dto.Request.CreateProductRequest;
+import com.shoes.product.dto.Request.UpdateProductRequest;
 import com.shoes.product.dto.Response.ProductResponse;
-import com.shoes.product.dto.Response.ProductSizeResponse;
 import com.shoes.product.entity.*;
+import com.shoes.product.exception.ConflictException;
+import com.shoes.product.exception.ResourceNotFoundException;
+import com.shoes.product.mapper.ProductMapper;
 import com.shoes.product.repository.BrandRepository;
 import com.shoes.product.repository.CategoryRepository;
 import com.shoes.product.repository.ProductRepository;
 import com.shoes.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for Product management
+ * Handles complex product operations including sizes, categories, images
+ */
 @Service
+@Transactional
 public class ProductServiceImpl implements ProductService {
+
     @Autowired
-    ProductRepository productRepository;
+    private ProductRepository productRepository;
+
     @Autowired
-    BrandRepository brandRepository;
+    private BrandRepository brandRepository;
+
     @Autowired
-    CategoryRepository categoryRepository;
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ProductMapper productMapper;
+
+    /**
+     * Create a new product with sizes and categories
+     * Validates unique constraints (SKU, slug, name)
+     */
     @Override
     public ProductResponse create(CreateProductRequest request) {
+        // Validate unique SKU
         if (productRepository.existsBySku(request.getSku())) {
-            throw new RuntimeException("SKU already exists");
-        }
-        if (productRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Product name already exists");
-        }
-        Brand brand = brandRepository.findByName(request.getBrandName()).orElseThrow(() -> new RuntimeException("Brand not found"));
-        Set<Category> categories = new HashSet<>();
-        if (request.getCategory() != null) {
-            categories = request.getCategory()
-                    .stream()
-                    .map(name -> categoryRepository.findByName(name).orElseThrow(() -> new RuntimeException("Category not found")))
-                    .collect(Collectors.toSet());
+            throw new ConflictException("Product", "sku", request.getSku());
         }
 
-        Product product = Product.builder()
-                .name(request.getName())
-                .sku(request.getSku())
-                .slug(request.getSlug())
-                .price(request.getPrice())
-                .description(request.getDescription())
-                .brand(brand)
-                .categories(categories)
-                .salePrice(request.getSalePrice())
-                .importPrice(request.getImportPrice())
-                .status(ProductStatus.ACTIVE)
-                .build();
-        if (request.getSizes() != null) {
-            for (ProductSize size : request.getSizes()) {
-                size.setProduct(product);
-                product.getSizes().add(size);
+        // Validate unique name
+        if (productRepository.existsByName(request.getName())) {
+            throw new ConflictException("Product", "name", request.getName());
+        }
+
+        // Validate unique slug
+        if (productRepository.existsBySlug(request.getSlug())) {
+            throw new ConflictException("Product", "slug", request.getSlug());
+        }
+
+        // Fetch brand
+        Brand brand = brandRepository.findByName(request.getBrandName())
+                .orElseThrow(() -> new ResourceNotFoundException("Brand", "name", request.getBrandName()));
+
+        // Fetch and set categories
+        Set<Category> categories = new HashSet<>();
+        if (request.getCategory() != null && !request.getCategory().isEmpty()) {
+            for (String categoryName : request.getCategory()) {
+                Category category = categoryRepository.findByName(categoryName)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category", "name", categoryName));
+                categories.add(category);
             }
         }
-        return toProductResponse(productRepository.save(product));
+
+        // Create product entity
+        Product product = productMapper.toEntity(request);
+        product.setBrand(brand);
+        product.setCategories(categories);
+
+        // Add sizes to product
+        if (request.getSizes() != null && !request.getSizes().isEmpty()) {
+            for (var sizeRequest : request.getSizes()) {
+                ProductSize size = new ProductSize();
+                size.setSizeVn(sizeRequest.getSizeVn());
+                size.setQuantity(sizeRequest.getQuantity());
+                product.addSize(size);
+            }
+        }
+
+        Product savedProduct = productRepository.save(product);
+        return productMapper.toResponse(savedProduct);
     }
 
+    /**
+     * Get product by ID with all related data
+     */
     @Override
+    @Transactional(readOnly = true)
     public ProductResponse getById(Long id) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
-        return toProductResponse(product);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+        
+        // Increment view count (optional - can be done asynchronously in production)
+        return productMapper.toResponse(product);
     }
 
+    /**
+     * Get all products (non-deleted)
+     */
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAll() {
         List<Product> products = productRepository.findAll();
-        return products.stream().map(this::toProductResponse).collect(Collectors.toList());
+        return products.stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
+    /**
+     * Get products by list of IDs (for snapshots in order service)
+     */
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllById(List<Long> ids) {
         List<Product> products = productRepository.findByIdIn(ids);
         return products.stream()
-                .map(this::toProductResponse)
+                .map(productMapper::toResponse)
                 .toList();
     }
 
+    /**
+     * Get only active products
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllActive() {
+        List<Product> products = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.ACTIVE);
+        return products.stream()
+                .map(productMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * Update existing product
+     * Handles brand and category updates
+     */
+    @Override
+    public ProductResponse update(Long id, UpdateProductRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+
+        // Validate unique constraints if SKU/slug/name are being updated
+        if (request.getSku() != null && !request.getSku().equals(product.getSku())) {
+            if (productRepository.existsBySku(request.getSku())) {
+                throw new ConflictException("Product", "sku", request.getSku());
+            }
+        }
+
+        if (request.getSlug() != null && !request.getSlug().equals(product.getSlug())) {
+            if (productRepository.existsBySlug(request.getSlug())) {
+                throw new ConflictException("Product", "slug", request.getSlug());
+            }
+        }
+
+        if (request.getName() != null && !request.getName().equals(product.getName())) {
+            if (productRepository.existsByName(request.getName())) {
+                throw new ConflictException("Product", "name", request.getName());
+            }
+        }
+
+        // Update brand if provided
+        if (request.getBrandName() != null) {
+            Brand brand = brandRepository.findByName(request.getBrandName())
+                    .orElseThrow(() -> new ResourceNotFoundException("Brand", "name", request.getBrandName()));
+            product.setBrand(brand);
+        }
+
+        // Update categories if provided
+        if (request.getCategory() != null && !request.getCategory().isEmpty()) {
+            Set<Category> categories = new HashSet<>();
+            for (String categoryName : request.getCategory()) {
+                Category category = categoryRepository.findByName(categoryName)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category", "name", categoryName));
+                categories.add(category);
+            }
+            product.setCategories(categories);
+        }
+
+        // Update product status if provided
+        if (request.getStatus() != null) {
+            try {
+                product.setStatus(ProductStatus.valueOf(request.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid product status: " + request.getStatus());
+            }
+        }
+
+        // Use mapper to update base fields (non-nested)
+        productMapper.updateEntityFromRequest(request, product);
+
+        Product updatedProduct = productRepository.save(product);
+        return productMapper.toResponse(updatedProduct);
+    }
+
+    /**
+     * Soft delete product
+     */
     @Override
     public void delete(Long id) {
-
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+        product.softDelete();
+        productRepository.save(product);
     }
-    private ProductResponse toProductResponse(Product product) {
-        List<ProductSizeResponse> sizeResponses = product.getSizes().stream()
-                .map(size -> ProductSizeResponse.builder()
-                        .id(size.getId())
-                        .sizeVn(size.getSizeVn())
-                        .quantity(size.getQuantity())
-                        .build())
-                .toList();
 
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .sku(product.getSku())
-                .slug(product.getSlug())
-                .price(product.getPrice())
-                .description(product.getDescription())
-                .brandName(Optional.ofNullable(product.getBrand()).map(Brand::getName).orElse(null))
-                .category(product.getCategories().stream().map(Category::getName).collect(Collectors.toSet()))
-                .sizes(sizeResponses)
-                .salePrice(product.getSalePrice())
-                .importPrice(product.getImportPrice())
-                .status(product.getStatus())
-                .build();
+    /**
+     * Hard delete product
+     * WARNING: Use only for data cleanup, not for production
+     */
+    @Override
+    public void deleteHard(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
+        productRepository.delete(product);
     }
 }

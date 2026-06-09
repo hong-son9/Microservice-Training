@@ -3,7 +3,7 @@ spring:
     name: product-service
 
   datasource:
-    url: jdbc:mysql://mysql:3306/product_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://host.docker.internal:3306/product_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,6 +20,14 @@ spring:
     show-sql: true
     open-in-view: false
 
+  kafka:
+    bootstrap-servers: kafka:29092
+    consumer:
+      group-id: product-inventory-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 server:
   port: 8082
 

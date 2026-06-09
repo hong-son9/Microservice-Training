@@ -1,8 +1,9 @@
-package com.shoes.order.entity;
+ package com.shoes.order.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@Where(clause = "is_deleted = false")
 public abstract class BaseEntity implements Serializable {
 
     @Id
@@ -37,4 +39,28 @@ public abstract class BaseEntity implements Serializable {
     @LastModifiedBy
     @Column(name = "modified_by")
     private Long modifiedBy;
+
+    // ========== Soft Delete Fields ==========
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    /**
+     * Perform soft delete
+     */
+    public void softDelete() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Restore deleted entity
+     */
+    public void restore() {
+        this.isDeleted = false;
+        this.deletedAt = null;
+    }
 }

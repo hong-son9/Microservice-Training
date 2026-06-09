@@ -3,6 +3,7 @@ package com.shoes.identity.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -15,12 +16,14 @@ import java.time.LocalDateTime;
 /**
  * Abstract base entity — chua cac cot audit chung cho moi entity.
  * Dung Spring Data JPA Auditing: @CreatedDate/@LastModifiedDate tu dong gan timestamp.
- * @CreatedBy/@LastModifiedBy can mot AuditorAware bean (se cau hinh sau khi co JWT).
+ * @CreatedBy/@LastModifiedBy can mot AuditorAware bean.
+ * Includes soft delete support for data preservation.
  */
 @Getter
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@Where(clause = "is_deleted = false")
 public abstract class BaseEntity implements Serializable {
 
     @Id
@@ -42,4 +45,28 @@ public abstract class BaseEntity implements Serializable {
     @LastModifiedBy
     @Column(name = "modified_by")
     private Long modifiedBy;
+
+    // ========== Soft Delete Fields ==========
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    /**
+     * Perform soft delete
+     */
+    public void softDelete() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Restore deleted entity
+     */
+    public void restore() {
+        this.isDeleted = false;
+        this.deletedAt = null;
+    }
 }

@@ -2,6 +2,7 @@ package com.shoes.product.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,7 +36,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @ToString(exclude = {"sizes", "images", "categories"})
 @EqualsAndHashCode(of = "id", callSuper = false)
 public class Product extends BaseEntity {

@@ -2,6 +2,7 @@ package com.shoes.product.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Category entity — danh muc (Giay Nam, Giay Nu, Giay Tre Em, Boots, Sneaker...).
@@ -16,7 +17,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @ToString
 @EqualsAndHashCode(of = "id", callSuper = false)
 public class Category extends BaseEntity {

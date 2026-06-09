@@ -1,31 +1,43 @@
 package com.shoes.order.service.Impl;
 
+import com.shoes.order.client.CartClient;
 import com.shoes.order.client.ProductClient;
 import com.shoes.order.config.SecurityUtils;
+import com.shoes.order.dto.ApiResponse;
 import com.shoes.order.dto.Request.CartItemsRequest;
+import com.shoes.order.dto.Request.CreateOrderFromCartRequest;
 import com.shoes.order.dto.Request.CreateOrderRequest;
 import com.shoes.order.dto.Request.OrderItemRequest;
-import com.shoes.order.dto.Response.OrderItemResponse;
-import com.shoes.order.dto.Response.OrderResponse;
-import com.shoes.order.dto.Response.ProductSnapshotResponse;
+import com.shoes.order.dto.Response.*;
 import com.shoes.order.entity.Order;
 import com.shoes.order.entity.OrderItem;
 import com.shoes.order.entity.OrderStatus;
+import com.shoes.order.dto.event.OrderPlacedEvent;
+import com.shoes.order.exception.ResourceNotFoundException;
 import com.shoes.order.repository.OrderRepository;
 import com.shoes.order.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     @Autowired
     OrderRepository orderRepository;
     @Autowired
     private ProductClient productClient;
+    @Autowired
+    private CartClient cartClient;
+    @Autowired
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public OrderResponse create(CreateOrderRequest createOrderRequest) {
@@ -39,10 +51,13 @@ public class OrderServiceImpl implements OrderService {
                     return c;
                 })
                 .toList();
-        List<ProductSnapshotResponse> productSnapshotResponses = productClient.getProducts(
+        ApiResponse<List<ProductSnapshotResponse>> apiResponse = productClient.getProducts(
                 cartItemsRequests.stream()
                         .map(CartItemsRequest::getProductId)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())
+        );
+
+        List<ProductSnapshotResponse> productSnapshotResponses = apiResponse.getData();
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
                 .buyerUserId(SecurityUtils.getCurrentUserId())
@@ -101,6 +116,73 @@ public class OrderServiceImpl implements OrderService {
     public void cancel(Long id) {
 
     }
+
+    @Override
+    public OrderResponse createFromCart(CreateOrderFromCartRequest createOrderFromCartRequest) {
+        ResponseEntity<ApiResponse<CartResponse>> cartResponse = cartClient.getCartByUserId();
+        if (cartResponse.getBody() == null || !cartResponse.getBody().getSuccess()) {
+            throw new ResourceNotFoundException("Failed to retrieve cart");
+        }
+        CartResponse cartData = cartResponse.getBody().getData();
+        List<CartItemResponse> allCartItems = cartData.getItems();
+        if (allCartItems == null || allCartItems.isEmpty()) {
+            throw new ResourceNotFoundException("CartItems is empty!");
+        }
+        List<CartItemResponse> selectedItems = allCartItems.stream()
+                .filter(item -> createOrderFromCartRequest.getSelectedCartItemIds().contains(item.getId()))
+                .toList();
+
+        if (selectedItems.isEmpty()) {
+            throw new ResourceNotFoundException("Not found any cart item");
+        }
+        Order order = Order.builder()
+                .orderCode("SH-" + System.currentTimeMillis())
+                .buyerUserId(SecurityUtils.getCurrentUserId())
+                .receiverName(createOrderFromCartRequest.getReceiverName())
+                .receiverPhone(createOrderFromCartRequest.getReceiverPhone())
+                .receiverAddress(createOrderFromCartRequest.getReceiverAddress())
+                .note(createOrderFromCartRequest.getNote())
+                .status(OrderStatus.PENDING)
+                .discountAmount(0L)
+                .shippingFee(30000L)
+                .build();
+        long subtotal = 0;
+        for (CartItemResponse cartItem : selectedItems) {
+            long lineTotal = cartItem.getUnitPrice() * cartItem.getQuantity();
+            subtotal += lineTotal;
+
+            OrderItem orderItem = OrderItem.builder()
+                    .productId(cartItem.getProductId())
+                    .productName(cartItem.getProductName())
+                    .productImage(cartItem.getProductImage())
+                    .productSku(cartItem.getProductSlug())
+                    .sizeVn(cartItem.getSizeVn())
+                    .quantity(cartItem.getQuantity())
+                    .unitPrice(cartItem.getUnitPrice())
+                    .lineTotal(lineTotal)
+                    .build();
+            order.addItem(orderItem);
+        }
+        order.setSubtotal(subtotal);
+        order.setTotal(subtotal - order.getDiscountAmount() + order.getShippingFee());
+        Order savedOrder = orderRepository.save(order);
+        List<OrderPlacedEvent.OrderItemEvent> itemEvents = savedOrder.getItems().stream()
+                .map(i -> OrderPlacedEvent.OrderItemEvent.builder()
+                        .productId(i.getProductId())
+                        .quantity(i.getQuantity())
+                        .sizeVn(i.getSizeVn())
+                        .build()).toList();
+        OrderPlacedEvent kafkaEvent = OrderPlacedEvent.builder()
+                .orderId(savedOrder.getId())
+                .orderCode(savedOrder.getOrderCode())
+                .buyerUserId(savedOrder.getBuyerUserId())
+                .selectedProductIds(createOrderFromCartRequest.getSelectedCartItemIds())
+                .items(itemEvents)
+                .build();
+        kafkaTemplate.send("order-placed-topic", kafkaEvent);
+        return mapToResponse(savedOrder);
+    }
+
     private OrderResponse mapToResponse(Order order) {
 
         return OrderResponse.builder()
@@ -131,4 +213,6 @@ public class OrderServiceImpl implements OrderService {
                 )
                 .build();
     }
+
+
 }

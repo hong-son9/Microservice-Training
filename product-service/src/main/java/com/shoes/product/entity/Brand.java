@@ -2,6 +2,7 @@ package com.shoes.product.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Brand entity — nhan hieu giay (Nike, Adidas, Puma...).
@@ -16,7 +17,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @ToString
 @EqualsAndHashCode(of = "id", callSuper = false)
 public class Brand extends BaseEntity {

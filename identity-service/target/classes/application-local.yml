@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3307/identity_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/identity_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -30,7 +30,8 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: host.docker.internal
 
 management:
   endpoints:

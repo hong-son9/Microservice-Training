@@ -1,5 +1,39 @@
-services:
+version: '3.8'
 
+networks:
+  shoes-network:
+    driver: bridge
+services:
+  # ===================================================================
+  # 1. HẠ TẦNG KAFKA & ZOOKEEPER
+  # ===================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - shoes-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    ports:
+      - "9092:9092" # Port expose ra ngoài nếu máy local muốn tương tác
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      # Cấu hình 2 listener: một cái cho mạng nội bộ Docker (29092), một cái cho máy local (9092)
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - shoes-network
   discovery-server:
     build: ./discovery-server
     ports:
@@ -21,6 +55,8 @@ services:
       - "5007:5005"
     depends_on:
       - discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -31,6 +67,8 @@ services:
       - "8083:8083"
     depends_on:
       - discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -41,6 +79,8 @@ services:
       - "8081:8081"
     depends_on:
       - discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -51,6 +91,8 @@ services:
       - "8084:8083"
     depends_on:
       - discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -61,5 +103,7 @@ services:
       - "8085:8082"
     depends_on:
       - discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"

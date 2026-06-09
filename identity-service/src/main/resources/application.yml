@@ -3,7 +3,7 @@ spring:
     name: identity-service
 
   datasource:
-    url: jdbc:mysql://mysql:3306/identity_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://host.docker.internal:3306/identity_db?useUnicode=yes&characterEncoding=UTF-8&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -13,7 +13,11 @@ spring:
       connection-timeout: 60000
       idle-timeout: 600000
       initialization-fail-timeout: 60000
-
+  kafka:
+    bootstrap-servers: kafka:29092 # Gọi tới tên container Kafka trong mạng Docker
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   jpa:
     hibernate:
       ddl-auto: update

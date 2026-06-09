@@ -19,6 +19,14 @@ spring:
     show-sql: true
     open-in-view: false
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: cart-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 server:
   port: 8083
 
@@ -29,4 +37,12 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
+#    prefer-ip-address: false
+#    hostname: host.docker.internal
+
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+app:
+  jwt:
+    secret: shoes-microservices-super-secret-jwt-key-min-256-bits-for-hs256-algorithm-pls-change-in-prod
+    expiration-ms: 86400000

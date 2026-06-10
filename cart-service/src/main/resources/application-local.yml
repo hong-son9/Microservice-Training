@@ -23,10 +23,27 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: cart-service-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # 1. Bọc bộ ErrorHandlingDeserializer ở lớp ngoài cùng
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
+        # 2. Định nghĩa bộ giải mã thực tế chạy bên trong
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+
+        # 3. CHÌA KHÓA VÀNG: Ép buộc không đọc Header package của order-service gửi sang
+        spring.json.use.type.headers: false
+
+        # 4. Chỉ định chính xác Class Event đích tại cart-service để ép kiểu
+        spring.json.value.default.type: "com.shoes.cart.dto.event.OrderPlacedEvent"
         spring.json.trusted.packages: "*"
+
+    # 5. CHẶN VÒNG LẶP VÔ HẠN: Cấu hình listener chỉ retry tối đa 1 lần nếu có lỗi, lỗi tiếp sẽ bỏ qua
+    listener:
+      back-off:
+        interval: 0
+        max-attempts: 1
 server:
   port: 8084
 

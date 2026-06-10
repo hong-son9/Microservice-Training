@@ -4,11 +4,12 @@ import com.shoes.order.client.CartClient;
 import com.shoes.order.client.ProductClient;
 import com.shoes.order.config.SecurityUtils;
 import com.shoes.order.dto.ApiResponse;
-import com.shoes.order.dto.Request.CartItemsRequest;
-import com.shoes.order.dto.Request.CreateOrderFromCartRequest;
-import com.shoes.order.dto.Request.CreateOrderRequest;
-import com.shoes.order.dto.Request.OrderItemRequest;
-import com.shoes.order.dto.Response.*;
+import com.shoes.order.dto.event.OrderCancelledEvent;
+import com.shoes.order.dto.request.CartItemsRequest;
+import com.shoes.order.dto.request.CreateOrderFromCartRequest;
+import com.shoes.order.dto.request.CreateOrderRequest;
+import com.shoes.order.dto.request.OrderItemRequest;
+import com.shoes.order.dto.response.*;
 import com.shoes.order.entity.Order;
 import com.shoes.order.entity.OrderItem;
 import com.shoes.order.entity.OrderStatus;
@@ -42,7 +43,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse create(CreateOrderRequest createOrderRequest) {
-//       userClient.getUser(SecurityUtils.getCurrentUserId());
+
+        for (int i = 0; i < createOrderRequest.getItems().size(); i++) {
+            ResponseEntity<ApiResponse<ProductSizeResponse>> productSizeResponse =
+                    productClient.getProductSize(createOrderRequest.getItems().get(i).getSizeVn(), createOrderRequest.getItems().get(i).getProductId());
+            if (productSizeResponse.getBody() == null || !productSizeResponse.getBody().getSuccess()) {
+                throw new ConflictException("There are no products in this size");
+            }
+            if (createOrderRequest.getItems().get(i).getQuantity() > productSizeResponse.getBody().getData().getQuantity()) {
+                throw new ConflictException("The product is out of stock");
+            }
+        }
         List<CartItemsRequest> cartItemsRequests = createOrderRequest.getItems().stream()
                 .map(item ->
                 {
@@ -92,7 +103,21 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setSubtotal(subtotal);
         order.setTotal(subtotal - order.getDiscountAmount() + order.getShippingFee());
-        return mapToResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        List<OrderPlacedEvent.OrderItemEvent> itemEvents = savedOrder.getItems().stream()
+                .map(i -> OrderPlacedEvent.OrderItemEvent.builder()
+                        .productId(i.getProductId())
+                        .quantity(i.getQuantity())
+                        .sizeVn(i.getSizeVn())
+                        .build()).toList();
+        OrderPlacedEvent kafkaEvent = OrderPlacedEvent.builder()
+                .orderId(savedOrder.getId())
+                .orderCode(savedOrder.getOrderCode())
+                .buyerUserId(savedOrder.getBuyerUserId())
+                .items(itemEvents)
+                .build();
+        kafkaTemplate.send("order-placed-topic", kafkaEvent);
+        return mapToResponse(savedOrder);
 
     }
 
@@ -114,8 +139,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void cancel(Long id) {
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new ConflictException("Orders can only be canceled when the status is PENDING.");
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
 
+        List<OrderCancelledEvent.OrderItemCancelEvent> orderItemCancelEvents = order.getItems().stream().map(
+                item -> OrderCancelledEvent.OrderItemCancelEvent.builder()
+                        .sizeVn(item.getSizeVn())
+                        .quantity(item.getQuantity())
+                        .productId(item.getProductId())
+                        .build()
+        ).toList();
+        OrderCancelledEvent orderCancelledEvent = OrderCancelledEvent.builder()
+                .buyerUserId(order.getBuyerUserId())
+                .orderId(orderId)
+                .orderCode(order.getOrderCode())
+                .items(orderItemCancelEvents).build();
+        kafkaTemplate.send("order-cancelled-topic", orderCancelledEvent);
     }
 
     @Override
@@ -130,7 +174,8 @@ public class OrderServiceImpl implements OrderService {
             throw new ConflictException("CartItems is empty!");
         }
         List<CartItemResponse> selectedItems = allCartItems.stream()
-                .filter(item -> createOrderFromCartRequest.getSelectedProductIds().contains(item.getId()))
+                .filter(item -> createOrderFromCartRequest.getSelectedProductIds() != null &&
+                        createOrderFromCartRequest.getSelectedProductIds().contains(item.getProductId()))
                 .toList();
 
         if (selectedItems.isEmpty()) {

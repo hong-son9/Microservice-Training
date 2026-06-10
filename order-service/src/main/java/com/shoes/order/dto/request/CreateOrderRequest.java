@@ -1,4 +1,4 @@
-package com.shoes.order.dto.Request;
+package com.shoes.order.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

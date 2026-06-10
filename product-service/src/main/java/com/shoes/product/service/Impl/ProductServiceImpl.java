@@ -3,6 +3,8 @@ package com.shoes.product.service.Impl;
 import com.shoes.product.dto.Request.CreateProductRequest;
 import com.shoes.product.dto.Request.UpdateProductRequest;
 import com.shoes.product.dto.Response.ProductResponse;
+import com.shoes.product.dto.event.OrderCancelledEvent;
+import com.shoes.product.dto.event.OrderPlacedEvent;
 import com.shoes.product.entity.*;
 import com.shoes.product.exception.ConflictException;
 import com.shoes.product.exception.ResourceNotFoundException;
@@ -10,6 +12,7 @@ import com.shoes.product.mapper.ProductMapper;
 import com.shoes.product.repository.BrandRepository;
 import com.shoes.product.repository.CategoryRepository;
 import com.shoes.product.repository.ProductRepository;
+import com.shoes.product.repository.ProductSizeRepository;
 import com.shoes.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private ProductSizeRepository productSizeRepository;
 
     /**
      * Create a new product with sizes and categories
@@ -146,6 +152,7 @@ public class ProductServiceImpl implements ProductService {
      * Handles brand and category updates
      */
     @Override
+    @Transactional
     public ProductResponse update(Long id, UpdateProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
@@ -196,6 +203,20 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
+        for (var sizeRequest : request.getSizes()) {
+            Optional<ProductSize> productSizeOpt = productSizeRepository
+                    .findByProductIdAndSizeVn(id, sizeRequest.getSizeVn());
+
+            if (productSizeOpt.isPresent()) {
+                ProductSize productSize = productSizeOpt.get();
+                int newQuantity = productSize.getQuantity() + sizeRequest.getQuantity();
+                productSize.setQuantity(newQuantity);
+                productSizeRepository.save(productSize);
+            } else {
+                throw new ConflictException("Product size not found");
+            }
+        }
+
         // Use mapper to update base fields (non-nested)
         productMapper.updateEntityFromRequest(request, product);
 
@@ -223,5 +244,37 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
         productRepository.delete(product);
+    }
+
+    @Override
+    @Transactional
+    public void deductStock(List<OrderPlacedEvent.OrderItemEvent> itemEvents) {
+        for (OrderPlacedEvent.OrderItemEvent itemEvent : itemEvents) {
+            ProductSize productSize = productSizeRepository
+                    .findByProductIdAndSizeVn(itemEvent.getProductId(), itemEvent.getSizeVn())
+                    .orElseThrow(() -> new ConflictException(
+                            "Product ID " + itemEvent.getProductId() + " with Size " + itemEvent.getSizeVn() + " does not exist."
+                    ));
+            if (itemEvent.getQuantity() > productSize.getQuantity()) {
+                throw new ConflictException("The product with Product ID " + itemEvent.getProductId() + " and Size " + itemEvent.getSizeVn() + " is out of stock.");
+            }
+            int newStock = productSize.getQuantity() - itemEvent.getQuantity();
+            productSize.setQuantity(newStock);
+            productSizeRepository.save(productSize);
+        }
+    }
+
+    @Override
+    public void refundStock(List<OrderCancelledEvent.OrderItemCancelEvent> itemCancelEvents) {
+        for (OrderCancelledEvent.OrderItemCancelEvent itemCancelEvent : itemCancelEvents) {
+            ProductSize productSize = productSizeRepository
+                    .findByProductIdAndSizeVn(itemCancelEvent.getProductId(), itemCancelEvent.getSizeVn())
+                    .orElseThrow(() -> new ConflictException(
+                            "Product ID " + itemCancelEvent.getProductId() + " with Size " + itemCancelEvent.getSizeVn() + " does not exist."
+                    ));
+            int newStock = productSize.getQuantity() + itemCancelEvent.getQuantity();
+            productSize.setQuantity(newStock);
+            productSizeRepository.save(productSize);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.shoes.order.dto.Response;
+package com.shoes.order.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

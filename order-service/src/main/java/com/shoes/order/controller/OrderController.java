@@ -1,9 +1,9 @@
 package com.shoes.order.controller;
 
 import com.shoes.order.dto.ApiResponse;
-import com.shoes.order.dto.Request.CreateOrderFromCartRequest;
-import com.shoes.order.dto.Request.CreateOrderRequest;
-import com.shoes.order.dto.Response.OrderResponse;
+import com.shoes.order.dto.request.CreateOrderFromCartRequest;
+import com.shoes.order.dto.request.CreateOrderRequest;
+import com.shoes.order.dto.response.OrderResponse;
 import com.shoes.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +40,14 @@ public class OrderController {
         OrderResponse response = orderService.createFromCart(request);
         return ResponseEntity.ok(
                 ApiResponse.success(response, "Order ok")
+        );
+    }
+
+    @PutMapping("/cancelOrder/{orderId}")
+    public ResponseEntity<ApiResponse<Void>> cancelOrder(@PathVariable("orderId") Long orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(
+                ApiResponse.success("Cancel order ok")
         );
     }
 }

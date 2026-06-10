@@ -1,5 +1,6 @@
 package com.shoes.cart.controller;
 
+import com.shoes.cart.config.SecurityUtils;
 import com.shoes.cart.dto.ApiResponse;
 import com.shoes.cart.dto.Request.CartItemRequest;
 import com.shoes.cart.dto.Response.CartResponse;
@@ -16,7 +17,7 @@ public class CartController {
     private CartService cartService;
     @GetMapping
     public ResponseEntity<ApiResponse<CartResponse>> getCart() {
-        return ResponseEntity.ok(ApiResponse.success(cartService.getCartByUserId()));
+        return ResponseEntity.ok(ApiResponse.success(cartService.getCartByUserId(SecurityUtils.getCurrentUserId())));
     }
 
     @PostMapping("/add")

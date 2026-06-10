@@ -3,6 +3,8 @@ package com.shoes.product.service;
 import com.shoes.product.dto.Request.CreateProductRequest;
 import com.shoes.product.dto.Request.UpdateProductRequest;
 import com.shoes.product.dto.Response.ProductResponse;
+import com.shoes.product.dto.event.OrderCancelledEvent;
+import com.shoes.product.dto.event.OrderPlacedEvent;
 
 import java.util.List;
 
@@ -51,4 +53,7 @@ public interface ProductService {
      * Hard delete - permanent deletion from database
      */
     void deleteHard(Long id);
+
+    void deductStock(List<OrderPlacedEvent.OrderItemEvent> itemEvents);
+    void refundStock(List<OrderCancelledEvent.OrderItemCancelEvent> itemCancelEvents);
 }

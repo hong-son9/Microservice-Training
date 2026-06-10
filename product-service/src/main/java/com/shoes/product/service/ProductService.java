@@ -2,9 +2,12 @@ package com.shoes.product.service;
 
 import com.shoes.product.dto.Request.CreateProductRequest;
 import com.shoes.product.dto.Request.UpdateProductRequest;
+import com.shoes.product.dto.Response.PagedResponse;
 import com.shoes.product.dto.Response.ProductResponse;
 import com.shoes.product.dto.event.OrderCancelledEvent;
 import com.shoes.product.dto.event.OrderPlacedEvent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 

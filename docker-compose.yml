@@ -30,6 +30,16 @@ services:
 
     networks:
       - shoes-network
+  redis:
+    image: redis:7.2-alpine
+    container_name: shoes-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   discovery-server:
     build: ./discovery-server
     ports:
@@ -103,3 +113,6 @@ services:
       - SPRING_PROFILES_ACTIVE=default
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+volumes:
+  redis_data:

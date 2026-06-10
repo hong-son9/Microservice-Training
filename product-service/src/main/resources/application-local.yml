@@ -38,6 +38,12 @@ spring:
       back-off:
         interval: 0
         max-attempts: 1
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+
 eureka:
   client:
     service-url:

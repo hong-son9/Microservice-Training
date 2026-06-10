@@ -15,6 +15,11 @@ import com.shoes.product.repository.ProductRepository;
 import com.shoes.product.repository.ProductSizeRepository;
 import com.shoes.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
      * Validates unique constraints (SKU, slug, name)
      */
     @Override
+    @CacheEvict(value = "products", key = "'all'")
     public ProductResponse create(CreateProductRequest request) {
         // Validate unique SKU
         if (productRepository.existsBySku(request.getSku())) {
@@ -116,6 +122,7 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "'all'")
     public List<ProductResponse> getAll() {
         List<Product> products = productRepository.findAll();
         return products.stream()
@@ -153,6 +160,7 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "products", key = "'all'")
     public ProductResponse update(Long id, UpdateProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
@@ -228,6 +236,7 @@ public class ProductServiceImpl implements ProductService {
      * Soft delete product
      */
     @Override
+    @CacheEvict(value = "products", key = "'all'")
     public void delete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
@@ -240,6 +249,7 @@ public class ProductServiceImpl implements ProductService {
      * WARNING: Use only for data cleanup, not for production
      */
     @Override
+    @CacheEvict(value = "products", key = "'all'")
     public void deleteHard(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));

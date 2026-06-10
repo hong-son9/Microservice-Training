@@ -24,6 +24,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
 server:
   port: 8083
 

@@ -27,6 +27,7 @@ public interface ProductMapper {
     @Mapping(target = "brandName", source = "brand.name")
     @Mapping(target = "category", source = "categories", qualifiedByName = "categoriesToNames")
     @Mapping(target = "sizes", source = "sizes", qualifiedByName = "sizesToResponses")
+    @Mapping(target = "isDeleted", expression = "java(entity.getIsDeleted())")
     ProductResponse toResponse(Product entity);
 
     /**

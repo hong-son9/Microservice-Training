@@ -21,9 +21,12 @@ import com.shoes.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
+    @CacheEvict(value = "orders_user", key = "#root.target.getCurrentUserId()")
     public OrderResponse create(CreateOrderRequest createOrderRequest) {
 
         for (int i = 0; i < createOrderRequest.getItems().size(); i++) {
@@ -122,6 +126,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Cacheable(value = "orders_user", key = "#root.target.getCurrentUserId()")
     public List<OrderResponse> getAllByUserId() {
         List<Order> orders = orderRepository.findAllByBuyerUserId(SecurityUtils.getCurrentUserId());
         return orders.stream().map(this::mapToResponse).collect(Collectors.toList());
@@ -139,6 +144,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "orders_user", key = "#root.target.getCurrentUserId()")
     public void cancelOrder(Long orderId) {
         Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         if (order.getStatus() != OrderStatus.PENDING) {
@@ -260,5 +267,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-
+    public Long getCurrentUserId() {
+        return SecurityUtils.getCurrentUserId();
+    }
 }

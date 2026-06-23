@@ -31,6 +31,7 @@ public class ProductConsumer {
     }
 
     @KafkaListener(topics = "order-cancelled-topic", groupId = "produce-service-group", properties = {"spring.json.value.default.type=com.shoes.product.dto.event.OrderCancelledEvent"})
+    @CacheEvict(value = "products", key = "'all'")
     public void orderCancelled(OrderCancelledEvent orderCancelledEvent) {
         try {
             if (orderCancelledEvent.getItems().isEmpty()) {

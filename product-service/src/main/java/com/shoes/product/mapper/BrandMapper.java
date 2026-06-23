@@ -1,8 +1,8 @@
 package com.shoes.product.mapper;
 
-import com.shoes.product.dto.Request.CreateBrandRequest;
-import com.shoes.product.dto.Request.UpdateBrandRequest;
-import com.shoes.product.dto.Response.BrandResponse;
+import com.shoes.product.dto.request.CreateBrandRequest;
+import com.shoes.product.dto.request.UpdateBrandRequest;
+import com.shoes.product.dto.response.BrandResponse;
 import com.shoes.product.entity.Brand;
 import org.mapstruct.*;
 

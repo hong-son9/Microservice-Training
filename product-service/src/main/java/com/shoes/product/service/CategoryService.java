@@ -1,8 +1,8 @@
 package com.shoes.product.service;
 
-import com.shoes.product.dto.Request.CreateCategoryRequest;
-import com.shoes.product.dto.Request.UpdateCategoryRequest;
-import com.shoes.product.dto.Response.CategoryResponse;
+import com.shoes.product.dto.request.CreateCategoryRequest;
+import com.shoes.product.dto.request.UpdateCategoryRequest;
+import com.shoes.product.dto.response.CategoryResponse;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.shoes.cart.client;
 
 import com.shoes.cart.dto.ApiResponse;
-import com.shoes.cart.dto.Response.ProductResponse;
-import com.shoes.cart.dto.Response.ProductSizeResponse;
+import com.shoes.cart.dto.response.ProductResponse;
+import com.shoes.cart.dto.response.ProductSizeResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

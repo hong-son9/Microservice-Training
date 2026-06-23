@@ -1,8 +1,7 @@
 package com.shoes.cart.consumer;
 
-import com.shoes.cart.dto.Response.CartResponse;
+import com.shoes.cart.dto.response.CartResponse;
 import com.shoes.cart.dto.event.OrderPlacedEvent;
-import com.shoes.cart.entity.Cart;
 import com.shoes.cart.service.CartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

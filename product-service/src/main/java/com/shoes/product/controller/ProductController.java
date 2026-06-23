@@ -1,17 +1,12 @@
 package com.shoes.product.controller;
 
 import com.shoes.product.dto.ApiResponse;
-import com.shoes.product.dto.Request.CreateProductRequest;
-import com.shoes.product.dto.Request.UpdateProductRequest;
-import com.shoes.product.dto.Response.PagedResponse;
-import com.shoes.product.dto.Response.ProductResponse;
+import com.shoes.product.dto.request.CreateProductRequest;
+import com.shoes.product.dto.request.UpdateProductRequest;
+import com.shoes.product.dto.response.ProductResponse;
 import com.shoes.product.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

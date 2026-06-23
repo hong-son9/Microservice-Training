@@ -1,6 +1,6 @@
 package com.shoes.order.config;
 
-import com.shoes.order.service.Impl.JwtService;
+import com.shoes.order.service.impl.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

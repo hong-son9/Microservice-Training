@@ -1,6 +1,6 @@
 package com.shoes.product.config;
 
-import com.shoes.product.service.Impl.JwtService;
+import com.shoes.product.service.impl.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

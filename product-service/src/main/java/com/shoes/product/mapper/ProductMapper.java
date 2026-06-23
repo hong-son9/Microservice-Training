@@ -1,10 +1,10 @@
 package com.shoes.product.mapper;
 
-import com.shoes.product.dto.Request.CreateProductRequest;
-import com.shoes.product.dto.Request.ProductSizeRequest;
-import com.shoes.product.dto.Request.UpdateProductRequest;
-import com.shoes.product.dto.Response.ProductResponse;
-import com.shoes.product.dto.Response.ProductSizeResponse;
+import com.shoes.product.dto.request.CreateProductRequest;
+import com.shoes.product.dto.request.ProductSizeRequest;
+import com.shoes.product.dto.request.UpdateProductRequest;
+import com.shoes.product.dto.response.ProductResponse;
+import com.shoes.product.dto.response.ProductSizeResponse;
 import com.shoes.product.entity.Category;
 import com.shoes.product.entity.Product;
 import com.shoes.product.entity.ProductSize;

@@ -1,8 +1,8 @@
 package com.shoes.product.controller;
 
 import com.shoes.product.dto.ApiResponse;
-import com.shoes.product.dto.Response.CategoryResponse;
-import com.shoes.product.dto.Request.CreateCategoryRequest;
+import com.shoes.product.dto.response.CategoryResponse;
+import com.shoes.product.dto.request.CreateCategoryRequest;
 import com.shoes.product.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

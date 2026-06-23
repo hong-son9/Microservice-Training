@@ -1,9 +1,9 @@
 package com.shoes.product.controller;
 
 import com.shoes.product.dto.ApiResponse;
-import com.shoes.product.dto.Request.CreateBrandRequest;
-import com.shoes.product.dto.Request.UpdateBrandRequest;
-import com.shoes.product.dto.Response.BrandResponse;
+import com.shoes.product.dto.request.CreateBrandRequest;
+import com.shoes.product.dto.request.UpdateBrandRequest;
+import com.shoes.product.dto.response.BrandResponse;
 import com.shoes.product.service.BrandService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,9 @@
 package com.shoes.cart.mapper;
 
-import com.shoes.cart.dto.Request.CartItemRequest;
-import com.shoes.cart.dto.Response.CartItemResponse;
-import com.shoes.cart.dto.Response.CartResponse;
-import com.shoes.cart.dto.Response.ProductResponse;
+import com.shoes.cart.dto.request.CartItemRequest;
+import com.shoes.cart.dto.response.CartItemResponse;
+import com.shoes.cart.dto.response.CartResponse;
+import com.shoes.cart.dto.response.ProductResponse;
 import com.shoes.cart.entity.Cart;
 import com.shoes.cart.entity.CartItem;
 import org.mapstruct.*;

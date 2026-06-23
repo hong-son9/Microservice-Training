@@ -2,9 +2,8 @@ package com.shoes.cart.controller;
 
 import com.shoes.cart.config.SecurityUtils;
 import com.shoes.cart.dto.ApiResponse;
-import com.shoes.cart.dto.Request.CartItemRequest;
-import com.shoes.cart.dto.Response.CartResponse;
-import com.shoes.cart.entity.Cart;
+import com.shoes.cart.dto.request.CartItemRequest;
+import com.shoes.cart.dto.response.CartResponse;
 import com.shoes.cart.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

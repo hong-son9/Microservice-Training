@@ -1,7 +1,7 @@
 package com.shoes.product.mapper;
 
-import com.shoes.product.dto.Request.ProductSizeRequest;
-import com.shoes.product.dto.Response.ProductSizeResponse;
+import com.shoes.product.dto.request.ProductSizeRequest;
+import com.shoes.product.dto.response.ProductSizeResponse;
 import com.shoes.product.entity.ProductSize;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

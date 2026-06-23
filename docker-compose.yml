@@ -74,6 +74,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATA_REDIS_HOST=shoes-redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -91,6 +92,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATA_REDIS_HOST=shoes-redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -125,6 +127,7 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATA_REDIS_HOST=shoes-redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

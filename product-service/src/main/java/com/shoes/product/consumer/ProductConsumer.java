@@ -5,6 +5,7 @@ import com.shoes.product.dto.event.OrderPlacedEvent;
 import com.shoes.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class ProductConsumer {
     private final ProductService productService;
     @KafkaListener(topics = "order-placed-topic", groupId = "product-service-group")
+    @CacheEvict(value = "products", key = "'all'")
     public void orderPlaced(OrderPlacedEvent orderPlacedEvent) {
         try {
             if (orderPlacedEvent.getItems().isEmpty()) {

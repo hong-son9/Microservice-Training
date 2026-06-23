@@ -10,6 +10,6 @@ public class CreateOrderFromCartRequest {
     private String receiverPhone;
     private String receiverAddress;
     private String note;
-
+    private Long promotionId;
     private List<Long> selectedProductIds;
 }

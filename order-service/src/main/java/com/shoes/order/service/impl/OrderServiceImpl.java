@@ -2,6 +2,7 @@ package com.shoes.order.service.impl;
 
 import com.shoes.order.client.CartClient;
 import com.shoes.order.client.ProductClient;
+import com.shoes.order.client.PromotionClient;
 import com.shoes.order.config.SecurityUtils;
 import com.shoes.order.dto.ApiResponse;
 import com.shoes.order.dto.event.OrderCancelledEvent;
@@ -42,10 +43,12 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CartClient cartClient;
     @Autowired
+    private final PromotionClient promotionClient;
+    @Autowired
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    @CacheEvict(value = "orders_user", key = "#root.target.getCurrentUserId()")
+//    @CacheEvict(value = "orders_user", key = "#root.target.getCurrentUserId()")
     public OrderResponse create(CreateOrderRequest createOrderRequest) {
 
         for (int i = 0; i < createOrderRequest.getItems().size(); i++) {
@@ -108,23 +111,52 @@ public class OrderServiceImpl implements OrderService {
         order.setSubtotal(subtotal);
         order.setTotal(subtotal - order.getDiscountAmount() + order.getShippingFee());
         Order savedOrder = orderRepository.save(order);
+        long discountAmount = 0;
+        if (createOrderRequest.getPromotionId() != null) {
+            try {
+                PromotionClient.ApplyCouponIdRequest applyRequest = new PromotionClient.ApplyCouponIdRequest(
+                        createOrderRequest.getPromotionId(),
+                        savedOrder.getBuyerUserId(),
+                        savedOrder.getId(),
+                        subtotal
+                );
+
+                ResponseEntity<ApiResponse<PromotionClient.PromotionUsageResponse>> promoResp =
+                        promotionClient.applyCouponById(applyRequest);
+
+                if (promoResp.getBody() != null && promoResp.getBody().getSuccess()) {
+                    discountAmount = promoResp.getBody().getData().getDiscountApplied();
+                }
+            } catch (Exception e) {
+                throw new ConflictException("Áp dụng mã giảm giá không thành công: " + e.getMessage());
+            }
+        }
+
+        // 5. Tính toán lại tổng tiền cuối cùng và lưu đè
+        savedOrder.setDiscountAmount(discountAmount);
+        savedOrder.setTotal(subtotal - discountAmount + savedOrder.getShippingFee());
+        savedOrder = orderRepository.save(savedOrder);
+
+        // 6. Gửi Event sang Kafka
         List<OrderPlacedEvent.OrderItemEvent> itemEvents = savedOrder.getItems().stream()
                 .map(i -> OrderPlacedEvent.OrderItemEvent.builder()
                         .productId(i.getProductId())
                         .quantity(i.getQuantity())
                         .sizeVn(i.getSizeVn())
                         .build()).toList();
+
         OrderPlacedEvent kafkaEvent = OrderPlacedEvent.builder()
                 .orderId(savedOrder.getId())
                 .orderCode(savedOrder.getOrderCode())
                 .buyerUserId(savedOrder.getBuyerUserId())
+                .promotionId(createOrderRequest.getPromotionId())
+                .discountAmount(discountAmount)
                 .items(itemEvents)
                 .build();
+
         kafkaTemplate.send("order-placed-topic", kafkaEvent);
         return mapToResponse(savedOrder);
-
     }
-
     @Override
     @Cacheable(value = "orders_user", key = "#root.target.getCurrentUserId()")
     public List<OrderResponse> getAllByUserId() {
@@ -219,19 +251,48 @@ public class OrderServiceImpl implements OrderService {
         order.setSubtotal(subtotal);
         order.setTotal(subtotal - order.getDiscountAmount() + order.getShippingFee());
         Order savedOrder = orderRepository.save(order);
+        long discountAmount = 0;
+        if (createOrderFromCartRequest.getPromotionId() != null) {
+            try {
+                PromotionClient.ApplyCouponIdRequest applyRequest = new PromotionClient.ApplyCouponIdRequest(
+                        createOrderFromCartRequest.getPromotionId(),
+                        savedOrder.getBuyerUserId(),
+                        savedOrder.getId(),
+                        subtotal
+                );
+                ResponseEntity<ApiResponse<PromotionClient.PromotionUsageResponse>> promoResp =
+                        promotionClient.applyCouponById(applyRequest);
+                if (promoResp.getBody() != null && promoResp.getBody().getSuccess()) {
+                    discountAmount = promoResp.getBody().getData().getDiscountApplied();
+                }
+            } catch (Exception e) {
+                throw new ConflictException("Áp dụng mã giảm giá không thành công: " + e.getMessage());
+            }
+        }
+
+        // Update lại giá trị tổng tiền chuẩn xác nhất
+        savedOrder.setDiscountAmount(discountAmount);
+        savedOrder.setTotal(subtotal - discountAmount + savedOrder.getShippingFee());
+        savedOrder = orderRepository.save(savedOrder);
+
+        // Bắn dữ liệu Kafka
         List<OrderPlacedEvent.OrderItemEvent> itemEvents = savedOrder.getItems().stream()
                 .map(i -> OrderPlacedEvent.OrderItemEvent.builder()
                         .productId(i.getProductId())
                         .quantity(i.getQuantity())
                         .sizeVn(i.getSizeVn())
                         .build()).toList();
+
         OrderPlacedEvent kafkaEvent = OrderPlacedEvent.builder()
                 .orderId(savedOrder.getId())
                 .orderCode(savedOrder.getOrderCode())
                 .buyerUserId(savedOrder.getBuyerUserId())
                 .selectedProductIds(createOrderFromCartRequest.getSelectedProductIds())
+                .promotionId(createOrderFromCartRequest.getPromotionId())
+                .discountAmount(discountAmount)
                 .items(itemEvents)
                 .build();
+
         kafkaTemplate.send("order-placed-topic", kafkaEvent);
         return mapToResponse(savedOrder);
     }

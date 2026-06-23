@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -15,6 +16,8 @@ public class OrderPlacedEvent {
     private Long orderId;
     private String orderCode;
     private Long buyerUserId;
+    private Long promotionId;
+    private Long discountAmount;
     private List<Long> selectedProductIds;
     private List<OrderItemEvent> items;
 

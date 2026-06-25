@@ -14,6 +14,7 @@ public class OrderPlacedEvent {
     private Long orderId;
     private String orderCode;
     private Long buyerUserId;
+    private Long promotionId;
     private List<OrderItemEvent> items;
 
     @Data

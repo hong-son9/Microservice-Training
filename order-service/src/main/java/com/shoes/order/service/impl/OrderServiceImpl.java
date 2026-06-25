@@ -110,6 +110,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setSubtotal(subtotal);
         order.setTotal(subtotal - order.getDiscountAmount() + order.getShippingFee());
+        order.setPromotionId(createOrderRequest.getPromotionId());
         Order savedOrder = orderRepository.save(order);
         long discountAmount = 0;
         if (createOrderRequest.getPromotionId() != null) {
@@ -197,6 +198,7 @@ public class OrderServiceImpl implements OrderService {
                 .buyerUserId(order.getBuyerUserId())
                 .orderId(orderId)
                 .orderCode(order.getOrderCode())
+                .promotionId(order.getPromotionId())
                 .items(orderItemCancelEvents).build();
         kafkaTemplate.send("order-cancelled-topic", orderCancelledEvent);
     }

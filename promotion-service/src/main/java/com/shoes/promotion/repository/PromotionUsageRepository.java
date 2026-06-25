@@ -16,4 +16,5 @@ public interface PromotionUsageRepository extends JpaRepository<PromotionUsage, 
     Optional<PromotionUsage> findByOrderId(Long orderId);
 
     Page<PromotionUsage> findByUserId(Long userId, Pageable pageable);
+    void deleteByUserIdAndPromotionIdAndOrderId(Long userId, Long promotionId, Long orderId);
 }

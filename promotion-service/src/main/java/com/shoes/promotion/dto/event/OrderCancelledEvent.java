@@ -1,4 +1,4 @@
-package com.shoes.product.dto.event;
+package com.shoes.promotion.dto.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -32,7 +32,6 @@ public class PromotionUsageController {
         return ResponseEntity.ok(result);
     }
 
-    // Endpoint nhận gọi từ Order-Service (qua Kafka/RabbitMQ hoặc FeignClient) để hoàn trả mã nếu đơn bị huỷ
     @PostMapping("/rollback/{orderId}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> rollbackCoupon(@PathVariable("orderId") Long orderId) {
@@ -40,7 +39,6 @@ public class PromotionUsageController {
         return ResponseEntity.ok().build();
     }
 
-    // Xem lịch sử dùng mã của user công khai
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<PromotionUsageDTO>> getUserHistory(@PathVariable("userId") Long userId, Pageable pageable) {
         return ResponseEntity.ok(usageService.getHistoryByUserId(userId, pageable));

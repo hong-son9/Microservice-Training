@@ -15,6 +15,7 @@ public class OrderCancelledEvent {
     private Long orderId;
     private String orderCode;
     private Long buyerUserId;
+    private Long promotionId;
     private List<OrderItemCancelEvent> items;
 
     @Data

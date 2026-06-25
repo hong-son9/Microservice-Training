@@ -1,6 +1,7 @@
 package com.shoes.promotion.controller;
 
 import com.shoes.promotion.dto.PromotionDTO;
+import com.shoes.promotion.dto.PromotionValidateResultDTO;
 import com.shoes.promotion.service.impl.PromotionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,5 +45,15 @@ public class PromotionController {
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         promotionService.deletePromotion(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<PromotionValidateResultDTO> validatePromotion(
+            @RequestParam("code") Long code,
+            @RequestParam("userId") Long userId,
+            @RequestParam("orderAmount") Long orderAmount) {
+
+        PromotionValidateResultDTO result = promotionService.validate(code, userId, orderAmount);
+        return ResponseEntity.ok(result);
     }
 }

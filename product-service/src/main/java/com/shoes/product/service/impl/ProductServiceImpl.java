@@ -280,7 +280,7 @@ public class ProductServiceImpl implements ProductService {
                     ));
             int newStock = productSize.getQuantity() + itemCancelEvent.getQuantity();
             productSize.setQuantity(newStock);
-            
+            // Test 4
             productSizeRepository.save(productSize);
         }
     }
